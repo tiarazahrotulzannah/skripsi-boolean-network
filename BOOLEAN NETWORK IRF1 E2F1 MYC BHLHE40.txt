@@ -1,0 +1,5 @@
+targets, factors
+IRF1, IRF1
+E2F1, !IRF1
+MYC, E2F1
+BHLHE40, BHLHE40
