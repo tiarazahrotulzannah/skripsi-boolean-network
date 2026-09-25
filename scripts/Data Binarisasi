@@ -1,0 +1,93 @@
+1. Binarisasi Nilai Ekspresi Gen Menggunakan Algoritma BASC-B  
+1.1 Implementasi Binarisasi Data Ekspresi Menggunakan Paket R BiTrinA - 
+Install BiTrinA  
+install.packages("BiTrinA") 
+library(BiTrinA)  
+packageVersion("BiTrinA") 
+
+1.2 Input file data nilai ekspresi ke 4 gen untuk BASC-B 
+library(readxl) 
+file_ekspresi <- "C:/Users/ASUS/Downloads/nilai ekspresi 4 gen.xlsx" 
+data_4gen <- read_excel(file_ekspresi) 
+dim(data_4gen) 
+head(data_4gen) 
+
+1.3 Cek bentuk datanya 
+colnames(data_4gen) 
+rownames(data_4gen) 
+
+1.4 Siapkan data untuk BASC-B  
+# Ambil hanya nilai ekspresi, tanpa kolom nama gen 
+expression_matrix <- as.matrix(data_4gen[, -1]) 
+# Pastikan nama baris adalah nama gen 
+rownames(expression_matrix) <- data_4gen$sample 
+# Cek ukuran 
+dim(expression_matrix) 
+# Cek nama gen 
+rownames(expression_matrix)
+
+1.5 Cek  fungsi BASC-B di BiTrinA  
+ls("package:BiTrinA") 
+help(package = "BiTrinA") 
+grep("BASC|basc|binar", ls("package:BiTrinA"), value = TRUE) 
+
+1.6 Cara kerja binarize.BASC  
+?binarize.BASC 
+args(binarize.BASC) 
+
+1.7 Threshold BASC-B untuk keempat gen.  
+library(openxlsx) 
+# ============================================ 
+# 1. Jalankan BASC-B untuk 4 gen 
+# ============================================ 
+genes <- c("E2F1", "IRF1", "MYC", "BHLHE40") 
+hasil_BASC <- lapply(genes, function(gene) { 
+vect <- as.numeric(expression_matrix[gene, ]) 
+binarize.BASC( 
+vect, 
+method = "B" 
+) 
+}) 
+names(hasil_BASC) <- genes 
+# ============================================ 
+# 2. Ambil threshold masing-masing gen 
+# ============================================ 
+threshold_BASC <- data.frame( 
+Gene = genes, 
+Threshold = sapply(hasil_BASC, function(x) x@threshold) 
+) 
+threshold_BASC
+
+1.8 BINARISASI 
+# ============================================ 
+# 3. Binarisasi data ekspresi berdasarkan 
+#    threshold BASC-B 
+# ============================================ 
+ 
+binarized_data <- data.frame( 
+  Sample = colnames(expression_matrix), 
+   
+  E2F1 = ifelse( 
+    expression_matrix["E2F1", ] >= 
+threshold_BASC$Threshold[threshold_BASC$Gene == "E2F1"], 
+    1, 0 
+  ), 
+   
+  IRF1 = ifelse( 
+    expression_matrix["IRF1", ] >= 
+threshold_BASC$Threshold[threshold_BASC$Gene == "IRF1"], 
+    1, 0 
+  ), 
+   
+  MYC = ifelse( 
+    expression_matrix["MYC", ] >= 
+threshold_BASC$Threshold[threshold_BASC$Gene == "MYC"], 
+    1, 0 
+  ), 
+BHLHE40 = ifelse( 
+expression_matrix["BHLHE40", ] >= 
+threshold_BASC$Threshold[threshold_BASC$Gene == "BHLHE40"], 
+1, 0 
+) 
+) 
+head(binarized_data)
